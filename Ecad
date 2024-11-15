@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CHP & Caltrans Info</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.1/dist/MarkerCluster.Default.css" />
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; }
+        #map { width: 65%; height: 100%; }
+        #sidebar { width: 35%; height: 100%; overflow-y: auto; border-left: 1px solid #ddd; padding: 10px; background: #f8f9fa; }
+        .incident, .traffic-item { margin-bottom: 10px; padding: 10px; background: white; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; }
+        .incident:hover, .traffic-item:hover { background: #eef; }
+        .expanded { background: #dff; }
+        .hidden { display: none; }
+        #controls { padding: 10px; background: #f8f9fa; border-bottom: 1px solid #ddd; }
+        .filter { margin-right: 10px; }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.1/dist/leaflet.markercluster.js"></script>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="sidebar">
+        <div id="controls">
+            <select id="incidentFilter" class="filter">
+                <option value="">All Incidents</option>
+                <option value="Accident">Accident</option>
+                <option value="Hazard">Hazard</option>
+                <option value="Road Closure">Road Closure</option>
+            </select>
+            <input id="radiusInput" class="filter" type="number" placeholder="Radius (miles)" min="1" max="100" value="20" />
+            <button id="applyFilters" class="filter">Apply</button>
+            <button id="darkModeToggle" class="filter">Toggle Dark Mode</button>
+        </div>
+        <h2>CHP Incidents</h2>
+        <div id="incidentList"></div>
+        <h2>Traffic Conditions</h2>
+        <div id="trafficList"></div>
+    </div>
+
+    <script>
+        let map, markers, darkMode = false;
+
+        function initMap(userLat, userLon) {
+            // Initialize the map
+            map = L.map('map').setView([userLat, userLon], 10);
+
+            // Add light and dark mode tile layers
+            const lightTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+                maxZoom: 18,
+            });
+
+            const darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://carto.com/">CartoDB</a>',
+                maxZoom: 18,
+            });
+
+            lightTileLayer.addTo(map);
+
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                darkMode = !darkMode;
+                darkMode ? darkTileLayer.addTo(map) && lightTileLayer.remove() : lightTileLayer.addTo(map) && darkTileLayer.remove();
+            });
+
+            // Add a marker cluster group
+            markers = L.markerClusterGroup();
+            map.addLayer(markers);
+        }
+
+        function fetchCHPIncidents(userLat, userLon, radius, filter) {
+            const latRange = radius / 69.172;
+            const lonRange = radius / (69.172 * Math.cos(userLat * (Math.PI / 180)));
+            const lat1 = userLat - latRange, lat2 = userLat + latRange;
+            const lon1 = userLon - lonRange, lon2 = userLon + lonRange;
+
+            fetch(`https://api.alpha.ca.gov/CHPIncidents?lat1=${lat1}&lat2=${lat2}&lon1=${lon1}&lon2=${lon2}`)
+                .then(response => response.json())
+                .then(data => {
+                    const filteredData = filter ? data.filter(incident => incident.type === filter) : data;
+                    const incidentList = document.getElementById('incidentList');
+                    incidentList.innerHTML = '';
+
+                    filteredData.forEach((incident, index) => {
+                        const marker = L.marker([incident.latitude, incident.longitude])
+                            .bindPopup(`
+                                <b>${incident.type}</b><br>
+                                ${incident.description}<br>
+                                <small>${incident.time}</small>
+                                <button onclick="getDirections(${incident.latitude}, ${incident.longitude})">Get Directions</button>
+                            `);
+                        markers.addLayer(marker);
+
+                        const item = document.createElement('div');
+                        item.className = 'incident';
+                        item.innerHTML = `<b>${incident.type}</b><br>${incident.description}`;
+                        item.addEventListener('click', () => toggleDetails(item, marker, incident));
+                        incidentList.appendChild(item);
+                    });
+                });
+        }
+
+        function fetchCaltransData() {
+            fetch('https://quickmap.dot.ca.gov/data')
+                .then(response => response.json())
+                .then(data => {
+                    const trafficList = document.getElementById('trafficList');
+                    trafficList.innerHTML = '';
+
+                    data.roadClosureChains.forEach((closure, index) => {
+                        const lat = closure.latitude;
+                        const lon = closure.longitude;
+
+                        const marker = L.marker([lat, lon], { icon: L.divIcon({ className: 'closure-icon', html: '🚧' }) })
+                            .addTo(map)
+                            .bindPopup(`<b>Road Closure</b><br>${closure.description}`);
+
+                        const item = document.createElement('div');
+                        item.className = 'traffic-item';
+                        item.innerHTML = `<b>Road Closure</b><br>${closure.description}`;
+                        item.addEventListener('click', () => toggleDetails(item, marker, closure));
+                        trafficList.appendChild(item);
+                    });
+                })
+                .catch(err => console.error('Error fetching Caltrans data:', err));
+        }
+
+        function toggleDetails(item, marker, data) {
+            const isExpanded = item.classList.contains('expanded');
+            document.querySelectorAll('.incident, .traffic-item').forEach(i => i.classList.remove('expanded'));
+            if (!isExpanded) {
+                item.classList.add('expanded');
+                map.setView(marker.getLatLng(), 14);
+                marker.openPopup();
+            } else {
+                marker.closePopup();
+            }
+        }
+
+        function getDirections(lat, lon) {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
+        }
+
+        document.getElementById('applyFilters').addEventListener('click', () => {
+            const radius = parseInt(document.getElementById('radiusInput').value, 10) || 20;
+            const filter = document.getElementById('incidentFilter').value;
+            navigator.geolocation.getCurrentPosition(position => {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+                markers.clearLayers();
+                fetchCHPIncidents(userLat, userLon, radius, filter);
+                fetchCaltransData();
+            });
+        });
+
+        navigator.geolocation.getCurrentPosition(position => {
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+
+            initMap(userLat, userLon);
+            fetchCHPIncidents(userLat, userLon, 20, null);
+            fetchCaltransData();
+        });
+
+        setInterval(() => {
+            navigator.geolocation.getCurrentPosition(position => {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+                const radius = parseInt(document.getElementById('radiusInput').value, 10) || 20;
+                const filter = document.getElementById('incidentFilter').value;
+                markers.clearLayers();
+                fetchCHPIncidents(userLat, userLon, radius, filter);
+                fetchCaltransData();
+            });
+        }, 60000);
+    </script>
+</body>
+</html>
