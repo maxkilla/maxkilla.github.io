@@ -546,3 +546,198 @@ body {
         max-width: none;
     }
 }
+
+/* API Key Modal */
+.api-key-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(8px);
+}
+
+.api-key-modal-content {
+    background: var(--surface-dark);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    width: 500px;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.api-key-modal h2 {
+    margin: 0 0 1rem;
+    color: var(--text-primary-dark);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.api-key-modal p {
+    margin: 0 0 1.5rem;
+    color: var(--text-secondary-dark);
+}
+
+.api-key-modal .hint {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.api-key-modal input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-dark);
+    border-radius: 0.5rem;
+    background: var(--surface-dark);
+    color: var(--text-primary-dark);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+}
+
+.api-key-modal input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.api-key-modal .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.api-key-modal button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.api-key-modal button.primary {
+    background: var(--primary);
+    color: white;
+}
+
+.api-key-modal button.primary:hover {
+    background: var(--primary-dark);
+}
+
+/* API Key Modal Loading State */
+.api-key-modal button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.button-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rotating {
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* API Key Modal Enhancements */
+.api-key-modal .input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.api-key-error {
+    display: none;
+    color: var(--error);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    background: rgba(255, 0, 0, 0.1);
+    border-left: 3px solid var(--error);
+}
+
+.api-key-instructions {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.api-key-instructions ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.api-key-instructions li {
+    margin: 0.25rem 0;
+}
+
+.api-key-instructions a {
+    color: var(--primary);
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.api-key-instructions a:hover {
+    color: var(--primary-light);
+    text-decoration: underline;
+}
+
+.api-key-modal input.error {
+    border-color: var(--error);
+    animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+@keyframes shake {
+    10%, 90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+    20%, 80% {
+        transform: translate3d(2px, 0, 0);
+    }
+    30%, 50%, 70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+    40%, 60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
