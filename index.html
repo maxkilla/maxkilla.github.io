@@ -2,19 +2,156 @@
 <html>
 <head>
     <title>CHP & Caltrans Info</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.1/dist/MarkerCluster.Default.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; }
-        #map { width: 65%; height: 100%; }
-        #sidebar { width: 35%; height: 100%; overflow-y: auto; border-left: 1px solid #ddd; padding: 10px; background: #f8f9fa; }
-        .incident, .traffic-item { margin-bottom: 10px; padding: 10px; background: white; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; }
-        .incident:hover, .traffic-item:hover { background: #eef; }
-        .expanded { background: #dff; }
-        .hidden { display: none; }
-        #controls { padding: 10px; background: #f8f9fa; border-bottom: 1px solid #ddd; }
-        .filter { margin-right: 10px; }
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --sidebar-bg: #f9fafb;
+            --card-hover: #f3f4f6;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1f2937;
+            --text-color: #f9fafb;
+            --border-color: #374151;
+            --sidebar-bg: #111827;
+            --card-hover: #374151;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif;
+            display: flex; 
+            height: 100vh;
+            color: var(--text-color);
+            background: var(--bg-color);
+            transition: all 0.3s ease;
+        }
+
+        #map { 
+            width: 65%; 
+            height: 100%;
+            z-index: 1;
+        }
+
+        #sidebar { 
+            width: 35%; 
+            height: 100%; 
+            overflow-y: auto;
+            border-left: 1px solid var(--border-color);
+            padding: 1.5rem;
+            background: var(--sidebar-bg);
+            transition: all 0.3s ease;
+        }
+
+        .incident, .traffic-item { 
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .incident:hover, .traffic-item:hover { 
+            background: var(--card-hover);
+            transform: translateY(-1px);
+        }
+
+        .expanded { 
+            background: var(--card-hover);
+            border-color: var(--primary-color);
+        }
+
+        #controls { 
+            padding: 1rem;
+            background: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        select.filter, input.filter {
+            min-width: 120px;
+        }
+
+        button.filter {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button.filter:hover {
+            background: var(--primary-hover);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        /* Scrollbar styling */
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: var(--sidebar-bg);
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 3px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            #map {
+                width: 100%;
+                height: 50vh;
+            }
+            #sidebar {
+                width: 100%;
+                height: 50vh;
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
+        }
     </style>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.1/dist/leaflet.markercluster.js"></script>
@@ -61,6 +198,7 @@
 
             document.getElementById('darkModeToggle').addEventListener('click', () => {
                 darkMode = !darkMode;
+                document.body.setAttribute('data-theme', darkMode ? 'dark' : 'light');
                 darkMode ? darkTileLayer.addTo(map) && lightTileLayer.remove() : lightTileLayer.addTo(map) && darkTileLayer.remove();
             });
 
@@ -75,7 +213,7 @@
             const lat1 = userLat - latRange, lat2 = userLat + latRange;
             const lon1 = userLon - lonRange, lon2 = userLon + lonRange;
 
-            fetch(`https://api.alpha.ca.gov/CHPIncidents?lat1=${lat1}&lat2=${lat2}&lon1=${lon1}&lon2=${lon2}`)
+            fetch(`https://cors-proxy.org/api/?url=${encodeURIComponent(`https://api.alpha.ca.gov/CHPIncidents?lat1=${lat1}&lat2=${lat2}&lon1=${lon1}&lon2=${lon2}`)}`)
                 .then(response => response.json())
                 .then(data => {
                     const filteredData = filter ? data.filter(incident => incident.type === filter) : data;
@@ -102,7 +240,7 @@
         }
 
         function fetchCaltransData() {
-            fetch('https://quickmap.dot.ca.gov/data')
+            fetch(`https://cors-proxy.org/api/?url=${encodeURIComponent('https://quickmap.dot.ca.gov/data')}`)
                 .then(response => response.json())
                 .then(data => {
                     const trafficList = document.getElementById('trafficList');
