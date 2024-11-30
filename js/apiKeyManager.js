@@ -100,23 +100,28 @@ class ApiKeyManager {
     }
 
     static async validateApiKeyWithGoogle(apiKey) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             // Create a temporary script to test the API key
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=validateGoogleMapsCallback`;
-            script.async = true;
+            const callbackName = 'validateGoogleMapsCallback_' + Math.random().toString(36).substr(2, 9);
+            
+            // Set script attributes for optimal loading
+            script.setAttribute('async', '');
+            script.setAttribute('defer', '');
+            script.setAttribute('loading', 'async');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}&loading=async`;
             
             // Set a timeout to handle failed loads
             const timeoutId = setTimeout(() => {
-                window.validateGoogleMapsCallback = null;
+                window[callbackName] = null;
                 script.remove();
                 resolve({ isValid: false, error: 'API key validation timed out. Please check your internet connection.' });
             }, 10000);
 
-            // Create a global callback function
-            window.validateGoogleMapsCallback = () => {
+            // Create a unique callback function
+            window[callbackName] = () => {
                 clearTimeout(timeoutId);
-                window.validateGoogleMapsCallback = null;
+                window[callbackName] = null;
                 script.remove();
                 
                 // Check if the Maps API was properly initialized
@@ -130,7 +135,7 @@ class ApiKeyManager {
             // Handle load errors
             script.onerror = () => {
                 clearTimeout(timeoutId);
-                window.validateGoogleMapsCallback = null;
+                window[callbackName] = null;
                 script.remove();
                 resolve({ isValid: false, error: 'Invalid API key or API quota exceeded.' });
             };
@@ -141,6 +146,8 @@ class ApiKeyManager {
 
     static async promptForApiKey() {
         return new Promise((resolve) => {
+            let isResolved = false;
+            
             const modal = document.createElement('div');
             modal.className = 'api-key-modal';
             modal.innerHTML = `
@@ -190,6 +197,8 @@ class ApiKeyManager {
             };
 
             const handleSubmit = async () => {
+                if (isResolved) return;
+                
                 const apiKey = input.value.trim();
                 
                 if (!apiKey) {
@@ -203,17 +212,29 @@ class ApiKeyManager {
                 }
 
                 setLoading(true);
-                const validationResult = await this.validateApiKeyWithGoogle(apiKey);
-                setLoading(false);
 
-                if (!validationResult.isValid) {
-                    this.showError(input, validationResult.error);
-                    return;
+                try {
+                    const validationResult = await this.validateApiKeyWithGoogle(apiKey);
+                    
+                    if (validationResult.isValid) {
+                        const saved = await this.saveApiKey(apiKey);
+                        if (saved) {
+                            isResolved = true;
+                            modal.remove();
+                            resolve(apiKey);
+                        } else {
+                            this.showError(input, 'Failed to save API key. Please try again.');
+                        }
+                    } else {
+                        this.showError(input, validationResult.error || 'Invalid API key');
+                    }
+                } catch (error) {
+                    this.showError(input, 'An error occurred while validating the API key');
+                } finally {
+                    if (!isResolved) {
+                        setLoading(false);
+                    }
                 }
-
-                await this.saveApiKey(apiKey);
-                modal.remove();
-                resolve(apiKey);
             };
 
             submitBtn.addEventListener('click', handleSubmit);

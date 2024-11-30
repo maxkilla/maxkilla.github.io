@@ -154,10 +154,23 @@
     <!-- Initialize App -->
     <script>
         let map;
+        let searchBox;
+        let isInitialized = false;
         
         function toggleNav() {
             const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+            }
+        }
+        
+        function handleThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('change', (e) => {
+                    document.body.classList.toggle('dark-theme', e.target.checked);
+                });
+            }
         }
         
         async function initMap(apiKey) {
@@ -174,17 +187,47 @@
             };
 
             try {
+                const mapElement = document.getElementById('map');
+                if (!mapElement) {
+                    throw new Error('Map container not found');
+                }
+
                 // Create the map instance
-                map = new google.maps.Map(document.getElementById('map'), mapOptions);
+                map = new google.maps.Map(mapElement, mapOptions);
                 
                 // Initialize search
                 const input = document.getElementById('pac-input');
-                const searchBox = new google.maps.places.SearchBox(input);
-                
-                // Bias SearchBox results towards current map's viewport
-                map.addListener('bounds_changed', () => {
-                    searchBox.setBounds(map.getBounds());
-                });
+                if (input) {
+                    searchBox = new google.maps.places.SearchBox(input);
+                    
+                    // Bias SearchBox results towards current map's viewport
+                    map.addListener('bounds_changed', () => {
+                        if (searchBox) {
+                            searchBox.setBounds(map.getBounds());
+                        }
+                    });
+
+                    // Listen for the event fired when the user selects a prediction
+                    searchBox.addListener('places_changed', () => {
+                        const places = searchBox.getPlaces();
+                        if (!places || places.length === 0) {
+                            return;
+                        }
+
+                        // For each place, get the location.
+                        const bounds = new google.maps.LatLngBounds();
+                        places.forEach(place => {
+                            if (place.geometry && place.geometry.location) {
+                                if (place.geometry.viewport) {
+                                    bounds.union(place.geometry.viewport);
+                                } else {
+                                    bounds.extend(place.geometry.location);
+                                }
+                            }
+                        });
+                        map.fitBounds(bounds);
+                    });
+                }
                 
                 return true;
             } catch (error) {
@@ -194,74 +237,145 @@
         }
 
         async function showMainContent() {
-            const appContent = document.getElementById('app-content');
-            const initialLoading = document.querySelector('.initial-loading');
-            
-            // Show main content first but keep loading screen
-            appContent.style.display = 'block';
-            
-            // Give the browser a moment to render the map div
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Now fade in the content and remove loading screen
-            appContent.style.opacity = '1';
-            initialLoading.style.opacity = '0';
-            setTimeout(() => initialLoading.remove(), 300);
+            try {
+                const appContent = document.getElementById('app-content');
+                const initialLoading = document.querySelector('.initial-loading');
+                
+                if (!appContent || !initialLoading) {
+                    throw new Error('Required elements not found');
+                }
+                
+                // Show main content first but keep loading screen
+                appContent.style.display = 'block';
+                
+                // Give the browser a moment to render the map div
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Now fade in the content and remove loading screen
+                appContent.style.opacity = '1';
+                initialLoading.style.opacity = '0';
+                setTimeout(() => {
+                    if (initialLoading.parentNode) {
+                        initialLoading.remove();
+                    }
+                }, 300);
+
+                // Initialize theme toggle after content is shown
+                handleThemeToggle();
+            } catch (error) {
+                console.error('Error showing main content:', error);
+            }
         }
 
         async function initializeApp() {
+            if (isInitialized) return;
+            
             try {
                 // Check for existing API key first
                 let apiKey = await ApiKeyManager.getApiKey();
+                let retryCount = 0;
+                const maxRetries = 3;
                 
-                if (!apiKey) {
-                    // Prompt for API key before showing any content
-                    apiKey = await ApiKeyManager.promptForApiKey();
+                while (!apiKey && retryCount < maxRetries) {
+                    try {
+                        // Prompt for API key before showing any content
+                        apiKey = await ApiKeyManager.promptForApiKey();
+                        retryCount++;
+                    } catch (error) {
+                        console.error('Error during API key prompt:', error);
+                        if (retryCount >= maxRetries) throw error;
+                    }
                 }
                 
-                if (apiKey) {
-                    // Show the container first but keep loading screen
-                    const appContent = document.getElementById('app-content');
+                if (!apiKey) {
+                    throw new Error('Failed to obtain valid API key after multiple attempts');
+                }
+                
+                // Show the container first but keep loading screen
+                const appContent = document.getElementById('app-content');
+                if (appContent) {
                     appContent.style.display = 'block';
+                }
+                
+                // Load Google Maps script with callback
+                const mapScriptPromise = new Promise((resolve, reject) => {
+                    const callbackName = 'initMap_' + Math.random().toString(36).substr(2, 9);
                     
-                    // Load Google Maps script with callback
-                    await new Promise((resolve, reject) => {
-                        window.initMapCallback = () => {
-                            resolve();
-                        };
-                        
-                        const script = document.createElement('script');
-                        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMapCallback`;
-                        script.async = true;
-                        script.defer = true;
-                        script.onerror = reject;
-                        document.head.appendChild(script);
-                    });
+                    window[callbackName] = () => {
+                        window[callbackName] = null;
+                        isInitialized = true;
+                        resolve();
+                    };
                     
-                    // Initialize map
-                    const mapInitialized = await initMap(apiKey);
+                    const script = document.createElement('script');
+                    script.setAttribute('async', '');
+                    script.setAttribute('defer', '');
+                    script.setAttribute('loading', 'async');
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}&loading=async`;
                     
-                    if (mapInitialized) {
-                        // Show main content once everything is ready
-                        await showMainContent();
-                    } else {
-                        throw new Error('Failed to initialize map');
-                    }
+                    script.onerror = () => {
+                        window[callbackName] = null;
+                        reject(new Error('Failed to load Google Maps script'));
+                    };
+                    
+                    document.head.appendChild(script);
+                });
+                
+                await mapScriptPromise;
+                
+                // Initialize map
+                const mapInitialized = await initMap(apiKey);
+                
+                if (mapInitialized) {
+                    // Show main content once everything is ready
+                    await showMainContent();
+                } else {
+                    throw new Error('Failed to initialize map');
                 }
             } catch (error) {
                 console.error('Failed to initialize app:', error);
-                document.body.innerHTML = `
+                const errorMessage = `
                     <div class="initialization-error">
                         <h2>Failed to Initialize Application</h2>
                         <p>${error.message || 'Please check your API key and try again.'}</p>
                         <button onclick="location.reload()">Retry</button>
                     </div>
                 `;
+                
+                // Safely update the error message
+                const body = document.body;
+                if (body) {
+                    body.innerHTML = errorMessage;
+                }
             }
         }
 
-        // Start initialization immediately
-        document.addEventListener('DOMContentLoaded', initializeApp);
+        // Clean up function to remove event listeners and clean up resources
+        function cleanup() {
+            if (map) {
+                google.maps.event.clearInstanceListeners(map);
+            }
+            if (searchBox) {
+                google.maps.event.clearInstanceListeners(searchBox);
+            }
+        }
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                cleanup();
+            }
+        });
+
+        // Ensure DOM is fully loaded before starting
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', cleanup);
     </script>
 </body>
 </html>
