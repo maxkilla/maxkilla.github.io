@@ -35,12 +35,130 @@
 
     <!-- Main App Content -->
     <div id="app-content" style="display: none;">
-        <!-- Your existing sidebar and main content here -->
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="material-icons-round">travel_explore</span>
+                    <h1>Smart Travel Hub</h1>
+                </div>
+                <button class="close-sidebar" onclick="toggleNav()">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+    
+            <div class="sidebar-content">
+                <!-- Search Box -->
+                <div class="search-container">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" id="pac-input" placeholder="Search location...">
+                </div>
+    
+                <!-- Layer Controls -->
+                <nav class="layer-controls">
+                    <!-- Road Conditions -->
+                    <div class="layer-group">
+                        <div class="layer-header">
+                            <span class="material-icons-round">route</span>
+                            <h2>Road Conditions</h2>
+                        </div>
+                        <div class="layer-items">
+                            <label class="switch-item">
+                                <span>Incidents</span>
+                                <input type="checkbox" id="incidents-toggle">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Chain Requirements</span>
+                                <input type="checkbox" id="chains-toggle">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Cameras</span>
+                                <input type="checkbox" id="cameras-toggle">
+                                <span class="switch"></span>
+                            </label>
+                        </div>
+                    </div>
+    
+                    <!-- Weather -->
+                    <div class="layer-group">
+                        <div class="layer-header">
+                            <span class="material-icons-round">thermostat</span>
+                            <h2>Weather</h2>
+                        </div>
+                        <div class="layer-items">
+                            <label class="switch-item">
+                                <span>Temperature</span>
+                                <input type="checkbox" id="temperature-toggle">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Precipitation</span>
+                                <input type="checkbox" id="precipitation-toggle">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Wind</span>
+                                <input type="checkbox" id="wind-toggle">
+                                <span class="switch"></span>
+                            </label>
+                        </div>
+                    </div>
+    
+                    <!-- Points of Interest -->
+                    <div class="layer-group">
+                        <div class="layer-header">
+                            <span class="material-icons-round">place</span>
+                            <h2>Points of Interest</h2>
+                        </div>
+                        <div class="layer-items">
+                            <label class="switch-item">
+                                <span>Rest Areas</span>
+                                <input type="checkbox" id="rest-areas-toggle">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Gas Stations</span>
+                                <input type="checkbox" id="gas-stations-toggle">
+                                <span class="switch"></span>
+                            </label>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+    
+            <!-- Theme Toggle -->
+            <div class="sidebar-footer">
+                <label class="switch-item">
+                    <span>Dark Mode</span>
+                    <input type="checkbox" id="theme-toggle" checked>
+                    <span class="switch"></span>
+                </label>
+            </div>
+        </aside>
+    
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Map Container -->
+            <div id="map"></div>
+            
+            <!-- Loading Overlay -->
+            <div class="loading-overlay">
+                <span class="material-icons-round rotating">sync</span>
+                <span>Loading map data...</span>
+            </div>
+        </main>
     </div>
 
     <!-- Initialize App -->
     <script>
         let map;
+        
+        function toggleNav() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
         
         async function initMap(apiKey) {
             const mapOptions = {
@@ -79,62 +197,68 @@
             const appContent = document.getElementById('app-content');
             const initialLoading = document.querySelector('.initial-loading');
             
-            // Show main content
+            // Show main content first but keep loading screen
             appContent.style.display = 'block';
-            setTimeout(() => {
-                appContent.style.opacity = '1';
-                // Fade out and remove loading screen
-                initialLoading.style.opacity = '0';
-                setTimeout(() => initialLoading.remove(), 300);
-            }, 100);
+            
+            // Give the browser a moment to render the map div
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Now fade in the content and remove loading screen
+            appContent.style.opacity = '1';
+            initialLoading.style.opacity = '0';
+            setTimeout(() => initialLoading.remove(), 300);
         }
 
         async function initializeApp() {
-    try {
-        // Check for existing API key first
-        let apiKey = await ApiKeyManager.getApiKey();
-        
-        if (!apiKey) {
-            // Prompt for API key before showing any content
-            apiKey = await ApiKeyManager.promptForApiKey();
-        }
-        
-        if (apiKey) {
-            // Load Google Maps script with callback
-            await new Promise((resolve, reject) => {
-                window.initMapCallback = () => {
-                    resolve();
-                };
+            try {
+                // Check for existing API key first
+                let apiKey = await ApiKeyManager.getApiKey();
                 
-                const script = document.createElement('script');
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMapCallback`;
-                script.async = true;
-                script.defer = true;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-            
-            // Initialize map
-            const mapInitialized = await initMap(apiKey);
-            
-            if (mapInitialized) {
-                // Show main content once everything is ready
-                await showMainContent();
-            } else {
-                throw new Error('Failed to initialize map');
+                if (!apiKey) {
+                    // Prompt for API key before showing any content
+                    apiKey = await ApiKeyManager.promptForApiKey();
+                }
+                
+                if (apiKey) {
+                    // Show the container first but keep loading screen
+                    const appContent = document.getElementById('app-content');
+                    appContent.style.display = 'block';
+                    
+                    // Load Google Maps script with callback
+                    await new Promise((resolve, reject) => {
+                        window.initMapCallback = () => {
+                            resolve();
+                        };
+                        
+                        const script = document.createElement('script');
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMapCallback`;
+                        script.async = true;
+                        script.defer = true;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                    
+                    // Initialize map
+                    const mapInitialized = await initMap(apiKey);
+                    
+                    if (mapInitialized) {
+                        // Show main content once everything is ready
+                        await showMainContent();
+                    } else {
+                        throw new Error('Failed to initialize map');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                document.body.innerHTML = `
+                    <div class="initialization-error">
+                        <h2>Failed to Initialize Application</h2>
+                        <p>${error.message || 'Please check your API key and try again.'}</p>
+                        <button onclick="location.reload()">Retry</button>
+                    </div>
+                `;
             }
         }
-    } catch (error) {
-        console.error('Failed to initialize app:', error);
-        document.body.innerHTML = `
-            <div class="initialization-error">
-                <h2>Failed to Initialize Application</h2>
-                <p>${error.message || 'Please check your API key and try again.'}</p>
-                <button onclick="location.reload()">Retry</button>
-            </div>
-        `;
-    }
-}
 
         // Start initialization immediately
         document.addEventListener('DOMContentLoaded', initializeApp);
