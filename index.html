@@ -213,8 +213,20 @@
             const lat1 = userLat - latRange, lat2 = userLat + latRange;
             const lon1 = userLon - lonRange, lon2 = userLon + lonRange;
 
-            fetch(`https://cors-proxy.org/api/?url=${encodeURIComponent(`https://api.alpha.ca.gov/CHPIncidents?lat1=${lat1}&lat2=${lat2}&lon1=${lon1}&lon2=${lon2}`)}`)
-                .then(response => response.json())
+            fetch(`https://api.alpha.ca.gov/CHPIncidents?lat1=${lat1}&lat2=${lat2}&lon1=${lon1}&lon2=${lon2}`, {
+                method: 'GET',
+                mode: 'no-cors',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.type === 'opaque') {
+                        console.log('Response is opaque due to CORS policy');
+                        return [];
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const filteredData = filter ? data.filter(incident => incident.type === filter) : data;
                     const incidentList = document.getElementById('incidentList');
@@ -240,8 +252,20 @@
         }
 
         function fetchCaltransData() {
-            fetch(`https://cors-proxy.org/api/?url=${encodeURIComponent('https://quickmap.dot.ca.gov/data')}`)
-                .then(response => response.json())
+            fetch('https://quickmap.dot.ca.gov/data', {
+                method: 'GET',
+                mode: 'no-cors',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.type === 'opaque') {
+                        console.log('Response is opaque due to CORS policy');
+                        return [];
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const trafficList = document.getElementById('trafficList');
                     trafficList.innerHTML = '';
