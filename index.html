@@ -144,8 +144,8 @@
             }).addTo(map);
 
             // Initialize settings manager
-            window.settingsManager = new SettingsManager();
-            await window.settingsManager.initialize();
+            window.settingsManager = Settings.getInstance();
+            await window.settingsManager.loadSettings();
 
             // Initialize module manager
             window.moduleManager = new ModuleManager(map);

@@ -104,9 +104,15 @@ class EVChargingModule {
     }
 }
 
-// Register the module
-window.addEventListener('DOMContentLoaded', () => {
-    const map = window.map; // Assuming the map is stored in window.map
-    const evModule = new EVChargingModule(map);
+// Register the module after core systems are initialized
+if (window.moduleManager) {
+    const evModule = new EVChargingModule(window.map);
     window.moduleManager.registerModule('evcharging', evModule);
-});
+} else {
+    window.addEventListener('load', () => {
+        if (window.moduleManager) {
+            const evModule = new EVChargingModule(window.map);
+            window.moduleManager.registerModule('evcharging', evModule);
+        }
+    });
+}
