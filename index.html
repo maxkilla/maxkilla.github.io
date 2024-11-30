@@ -162,9 +162,12 @@
         <div id="controls">
             <select id="incidentFilter" class="filter">
                 <option value="">All Incidents</option>
-                <option value="Accident">Accident</option>
-                <option value="Hazard">Hazard</option>
+                <option value="Traffic Collision">Traffic Collision</option>
+                <option value="Traffic Hazard">Traffic Hazard</option>
+                <option value="Disabled Vehicle">Disabled Vehicle</option>
                 <option value="Road Closure">Road Closure</option>
+                <option value="Fire">Fire</option>
+                <option value="Police Activity">Police Activity</option>
             </select>
             <input id="radiusInput" class="filter" type="number" placeholder="Radius (miles)" min="1" max="100" value="20" />
             <button id="applyFilters" class="filter">Apply</button>
@@ -214,27 +217,38 @@
             const lon1 = userLon - lonRange, lon2 = userLon + lonRange;
 
             // Using secure proxy for CHP Incidents
-            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.alpha.ca.gov/CHPIncidents?lat1=${lat1}&lat2=${lat2}&lon1=${lon1}&lon2=${lon2}`)}`)
+            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://cwwp2.dot.ca.gov/data/d3/cad/chp-cad.json`)}`)
                 .then(response => response.json())
                 .then(data => {
                     const parsedData = JSON.parse(data.contents);
-                    const filteredData = filter ? parsedData.filter(incident => incident.type === filter) : parsedData;
+                    // Filter incidents within the specified bounds
+                    const filteredData = parsedData.incidents.filter(incident => {
+                        if (!incident.latitude || !incident.longitude) return false;
+                        const incidentLat = parseFloat(incident.latitude);
+                        const incidentLon = parseFloat(incident.longitude);
+                        return incidentLat >= lat1 && incidentLat <= lat2 && 
+                               incidentLon >= lon1 && incidentLon <= lon2 &&
+                               (!filter || incident.incidentType === filter);
+                    });
+                    
                     const incidentList = document.getElementById('incidentList');
                     incidentList.innerHTML = '';
 
                     filteredData.forEach((incident, index) => {
-                        const marker = L.marker([incident.latitude, incident.longitude])
+                        const lat = parseFloat(incident.latitude);
+                        const lon = parseFloat(incident.longitude);
+                        const marker = L.marker([lat, lon])
                             .bindPopup(`
-                                <b>${incident.type}</b><br>
+                                <b>${incident.incidentType}</b><br>
                                 ${incident.description}<br>
                                 <small>${incident.time}</small>
-                                <button onclick="getDirections(${incident.latitude}, ${incident.longitude})">Get Directions</button>
+                                <button onclick="getDirections(${lat}, ${lon})">Get Directions</button>
                             `);
                         markers.addLayer(marker);
 
                         const item = document.createElement('div');
                         item.className = 'incident';
-                        item.innerHTML = `<b>${incident.type}</b><br>${incident.description}`;
+                        item.innerHTML = `<b>${incident.incidentType}</b><br>${incident.description}`;
                         item.addEventListener('click', () => toggleDetails(item, marker, incident));
                         incidentList.appendChild(item);
                     });
