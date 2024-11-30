@@ -213,22 +213,12 @@
             const lat1 = userLat - latRange, lat2 = userLat + latRange;
             const lon1 = userLon - lonRange, lon2 = userLon + lonRange;
 
-            fetch(`https://api.alpha.ca.gov/CHPIncidents?lat1=${lat1}&lat2=${lat2}&lon1=${lon1}&lon2=${lon2}`, {
-                method: 'GET',
-                mode: 'no-cors',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            })
-                .then(response => {
-                    if (response.type === 'opaque') {
-                        console.log('Response is opaque due to CORS policy');
-                        return [];
-                    }
-                    return response.json();
-                })
+            // Using secure proxy for CHP Incidents
+            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.alpha.ca.gov/CHPIncidents?lat1=${lat1}&lat2=${lat2}&lon1=${lon1}&lon2=${lon2}`)}`)
+                .then(response => response.json())
                 .then(data => {
-                    const filteredData = filter ? data.filter(incident => incident.type === filter) : data;
+                    const parsedData = JSON.parse(data.contents);
+                    const filteredData = filter ? parsedData.filter(incident => incident.type === filter) : parsedData;
                     const incidentList = document.getElementById('incidentList');
                     incidentList.innerHTML = '';
 
@@ -252,25 +242,15 @@
         }
 
         function fetchCaltransData() {
-            fetch('https://quickmap.dot.ca.gov/data', {
-                method: 'GET',
-                mode: 'no-cors',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            })
-                .then(response => {
-                    if (response.type === 'opaque') {
-                        console.log('Response is opaque due to CORS policy');
-                        return [];
-                    }
-                    return response.json();
-                })
+            // Using secure proxy for Caltrans data
+            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://quickmap.dot.ca.gov/data')}`)
+                .then(response => response.json())
                 .then(data => {
+                    const parsedData = JSON.parse(data.contents);
                     const trafficList = document.getElementById('trafficList');
                     trafficList.innerHTML = '';
 
-                    data.roadClosureChains.forEach((closure, index) => {
+                    parsedData.roadClosureChains.forEach((closure, index) => {
                         const lat = closure.latitude;
                         const lon = closure.longitude;
 
