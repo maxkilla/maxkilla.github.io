@@ -7,12 +7,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="Smart Travel Hub - Your advanced rural travel companion">
     
-    <!-- Favicon and App Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="./appicons/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="./appicons/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="./appicons/favicon-32x32.png">
-    <link rel="manifest" href="./appicons/manifest.json">
-    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,183 +18,122 @@
     <!-- Main Stylesheet -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Google Maps -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+    <!-- API Key Manager -->
+    <script src="js/apiKeyManager.js"></script>
 </head>
 <body class="dark-theme">
-    <!-- App Shell -->
-    <div class="app-shell">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <span class="material-icons-round">travel_explore</span>
-                    <h1>Smart Travel Hub</h1>
-                </div>
-                <button class="close-sidebar" onclick="closeNav()">
-                    <span class="material-icons-round">close</span>
-                </button>
-            </div>
-
-            <div class="sidebar-content">
-                <!-- Search Box -->
-                <div class="search-container">
-                    <span class="material-icons-round">search</span>
-                    <input type="text" id="pac-input" placeholder="Search location...">
-                </div>
-
-                <!-- Layer Controls -->
-                <nav class="layer-controls">
-                    <!-- Road Conditions -->
-                    <div class="layer-group">
-                        <div class="layer-header">
-                            <span class="material-icons-round">route</span>
-                            <h2>Road Conditions</h2>
-                        </div>
-                        <div class="layer-items">
-                            <label class="switch-item">
-                                <span>Incidents</span>
-                                <input type="checkbox" onchange="AddRoadTravelConditionsContent('incidents')">
-                                <span class="switch"></span>
-                            </label>
-                            <label class="switch-item">
-                                <span>Chain Requirements</span>
-                                <input type="checkbox" onchange="AddRoadTravelConditionsContent('chains')">
-                                <span class="switch"></span>
-                            </label>
-                            <label class="switch-item">
-                                <span>Cameras</span>
-                                <input type="checkbox" onchange="AddRoadTravelConditionsContent('cameras')">
-                                <span class="switch"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Weather -->
-                    <div class="layer-group">
-                        <div class="layer-header">
-                            <span class="material-icons-round">thermostat</span>
-                            <h2>Weather</h2>
-                        </div>
-                        <div class="layer-items">
-                            <label class="switch-item">
-                                <span>Temperature</span>
-                                <input type="checkbox" onchange="AddCurrentWeatherContent('temperature')">
-                                <span class="switch"></span>
-                            </label>
-                            <label class="switch-item">
-                                <span>Precipitation</span>
-                                <input type="checkbox" onchange="AddCurrentWeatherContent('precipitation')">
-                                <span class="switch"></span>
-                            </label>
-                            <label class="switch-item">
-                                <span>Wind</span>
-                                <input type="checkbox" onchange="AddCurrentWeatherContent('wind')">
-                                <span class="switch"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Fire Information -->
-                    <div class="layer-group">
-                        <div class="layer-header">
-                            <span class="material-icons-round">local_fire_department</span>
-                            <h2>Fire Information</h2>
-                        </div>
-                        <div class="layer-items">
-                            <label class="switch-item">
-                                <span>Active Fires</span>
-                                <input type="checkbox" onchange="AddFireContent('active')">
-                                <span class="switch"></span>
-                            </label>
-                            <label class="switch-item">
-                                <span>Contained Fires</span>
-                                <input type="checkbox" onchange="AddFireContent('contained')">
-                                <span class="switch"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Other Information -->
-                    <div class="layer-group">
-                        <div class="layer-header">
-                            <span class="material-icons-round">info</span>
-                            <h2>Points of Interest</h2>
-                        </div>
-                        <div class="layer-items">
-                            <label class="switch-item">
-                                <span>Rest Areas</span>
-                                <input type="checkbox" onchange="AddOtherInfoContent('rest_areas')">
-                                <span class="switch"></span>
-                            </label>
-                            <label class="switch-item">
-                                <span>Viewpoints</span>
-                                <input type="checkbox" onchange="AddOtherInfoContent('viewpoints')">
-                                <span class="switch"></span>
-                            </label>
-                            <label class="switch-item">
-                                <span>Services</span>
-                                <input type="checkbox" onchange="AddOtherInfoContent('services')">
-                                <span class="switch"></span>
-                            </label>
-                        </div>
-                    </div>
-                </nav>
-            </div>
-
-            <!-- Theme Toggle -->
-            <div class="sidebar-footer">
-                <label class="switch-item">
-                    <span>Dark Mode</span>
-                    <input type="checkbox" id="theme-toggle" checked>
-                    <span class="switch"></span>
-                </label>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Map Container -->
-            <div id="map"></div>
-
-            <!-- Floating Controls -->
-            <div class="floating-controls">
-                <button class="menu-button" onclick="openNav()">
-                    <span class="material-icons-round">menu</span>
-                </button>
-                <button class="location-button" onclick="getCurrentLocation()">
-                    <span class="material-icons-round">my_location</span>
-                </button>
-            </div>
-
-            <!-- Legend -->
-            <div id="legend" class="legend"></div>
-        </main>
-
-        <!-- Loading Overlay -->
-        <div id="loading" class="loading-overlay">
-            <div class="loading-content">
-                <div class="loading-spinner"></div>
-                <span>Loading...</span>
+    <!-- Loading Screen -->
+    <div class="initial-loading">
+        <div class="loading-content">
+            <h1>Smart Travel Hub</h1>
+            <p>Initializing application...</p>
+            <div class="loading-spinner">
+                <span class="material-icons-round rotating">sync</span>
             </div>
         </div>
-
-        <!-- Error Toast -->
-        <div id="error-container" class="toast-container"></div>
     </div>
 
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => console.log('ServiceWorker registered'))
-                    .catch(err => console.log('ServiceWorker registration failed:', err));
-            });
-        }
-    </script>
+    <!-- Main App Content -->
+    <div id="app-content" style="display: none;">
+        <!-- Your existing sidebar and main content here -->
+    </div>
 
-    <!-- Main Application Script -->
-    <script type="module" src="js/app.js"></script>
+    <!-- Initialize App -->
+    <script>
+        let map;
+        
+        async function initMap(apiKey) {
+            const mapOptions = {
+                center: { lat: 44.5, lng: -89.5 }, // Wisconsin center
+                zoom: 7,
+                styles: [
+                    // Dark theme map styles will be added here
+                ],
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+                zoomControl: true
+            };
+
+            try {
+                // Create the map instance
+                map = new google.maps.Map(document.getElementById('map'), mapOptions);
+                
+                // Initialize search
+                const input = document.getElementById('pac-input');
+                const searchBox = new google.maps.places.SearchBox(input);
+                
+                // Bias SearchBox results towards current map's viewport
+                map.addListener('bounds_changed', () => {
+                    searchBox.setBounds(map.getBounds());
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                return false;
+            }
+        }
+
+        async function showMainContent() {
+            const appContent = document.getElementById('app-content');
+            const initialLoading = document.querySelector('.initial-loading');
+            
+            // Show main content
+            appContent.style.display = 'block';
+            setTimeout(() => {
+                appContent.style.opacity = '1';
+                // Fade out and remove loading screen
+                initialLoading.style.opacity = '0';
+                setTimeout(() => initialLoading.remove(), 300);
+            }, 100);
+        }
+
+        async function initializeApp() {
+            try {
+                // Check for existing API key first
+                let apiKey = await ApiKeyManager.getApiKey();
+                
+                if (!apiKey) {
+                    // Prompt for API key before showing any content
+                    apiKey = await ApiKeyManager.promptForApiKey();
+                }
+                
+                if (apiKey) {
+                    // Load Google Maps script
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+                        script.async = true;
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                    
+                    // Initialize map
+                    const mapInitialized = await initMap(apiKey);
+                    
+                    if (mapInitialized) {
+                        // Show main content once everything is ready
+                        await showMainContent();
+                    } else {
+                        throw new Error('Failed to initialize map');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                document.body.innerHTML = `
+                    <div class="initialization-error">
+                        <h2>Failed to Initialize Application</h2>
+                        <p>${error.message || 'Please check your API key and try again.'}</p>
+                        <button onclick="location.reload()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Start initialization immediately
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
 </body>
 </html>
