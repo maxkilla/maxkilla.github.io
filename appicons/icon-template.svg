@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="#2196f3"/>
+  
+  <!-- Compass Rose Design -->
+  <g transform="translate(128, 128) scale(0.5)">
+    <path d="M256 48L384 464L256 400L128 464L256 48Z" fill="white"/>
+    <path d="M48 256L464 384L400 256L464 128L48 256Z" fill="white"/>
+    <circle cx="256" cy="256" r="64" fill="white"/>
+  </g>
+</svg>

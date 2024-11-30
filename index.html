@@ -1,335 +1,206 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>CHP & Caltrans Info</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.1/dist/MarkerCluster.Default.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #ffffff;
-            --text-color: #1f2937;
-            --border-color: #e5e7eb;
-            --sidebar-bg: #f9fafb;
-            --card-hover: #f3f4f6;
-        }
-
-        [data-theme="dark"] {
-            --bg-color: #1f2937;
-            --text-color: #f9fafb;
-            --border-color: #374151;
-            --sidebar-bg: #111827;
-            --card-hover: #374151;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body { 
-            margin: 0; 
-            font-family: 'Inter', sans-serif;
-            display: flex; 
-            height: 100vh;
-            color: var(--text-color);
-            background: var(--bg-color);
-            transition: all 0.3s ease;
-        }
-
-        #map { 
-            width: 65%; 
-            height: 100%;
-            z-index: 1;
-        }
-
-        #sidebar { 
-            width: 35%; 
-            height: 100%; 
-            overflow-y: auto;
-            border-left: 1px solid var(--border-color);
-            padding: 1.5rem;
-            background: var(--sidebar-bg);
-            transition: all 0.3s ease;
-        }
-
-        .incident, .traffic-item { 
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .incident:hover, .traffic-item:hover { 
-            background: var(--card-hover);
-            transform: translateY(-1px);
-        }
-
-        .expanded { 
-            background: var(--card-hover);
-            border-color: var(--primary-color);
-        }
-
-        #controls { 
-            padding: 1rem;
-            background: var(--sidebar-bg);
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 1.5rem;
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .filter {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.375rem;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
-        }
-
-        select.filter, input.filter {
-            min-width: 120px;
-        }
-
-        button.filter {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        button.filter:hover {
-            background: var(--primary-hover);
-        }
-
-        h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--text-color);
-        }
-
-        /* Scrollbar styling */
-        #sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #sidebar::-webkit-scrollbar-track {
-            background: var(--sidebar-bg);
-        }
-
-        #sidebar::-webkit-scrollbar-thumb {
-            background-color: var(--border-color);
-            border-radius: 3px;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-            #map {
-                width: 100%;
-                height: 50vh;
-            }
-            #sidebar {
-                width: 100%;
-                height: 50vh;
-                border-left: none;
-                border-top: 1px solid var(--border-color);
-            }
-        }
-    </style>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.1/dist/leaflet.markercluster.js"></script>
+    <title>Smart Travel Hub | Rural Traveler Information System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Smart Travel Hub - Your advanced rural travel companion">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./appicons/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./appicons/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./appicons/favicon-32x32.png">
+    <link rel="manifest" href="./appicons/manifest.json">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Google Maps -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
 </head>
-<body>
-    <div id="map"></div>
-    <div id="sidebar">
-        <div id="controls">
-            <select id="incidentFilter" class="filter">
-                <option value="">All Incidents</option>
-                <option value="Traffic Collision">Traffic Collision</option>
-                <option value="Traffic Hazard">Traffic Hazard</option>
-                <option value="Disabled Vehicle">Disabled Vehicle</option>
-                <option value="Road Closure">Road Closure</option>
-                <option value="Fire">Fire</option>
-                <option value="Police Activity">Police Activity</option>
-            </select>
-            <input id="radiusInput" class="filter" type="number" placeholder="Radius (miles)" min="1" max="100" value="20" />
-            <button id="applyFilters" class="filter">Apply</button>
-            <button id="darkModeToggle" class="filter">Toggle Dark Mode</button>
+<body class="dark-theme">
+    <!-- App Shell -->
+    <div class="app-shell">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="material-icons-round">travel_explore</span>
+                    <h1>Smart Travel Hub</h1>
+                </div>
+                <button class="close-sidebar" onclick="closeNav()">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- Search Box -->
+                <div class="search-container">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" id="pac-input" placeholder="Search location...">
+                </div>
+
+                <!-- Layer Controls -->
+                <nav class="layer-controls">
+                    <!-- Road Conditions -->
+                    <div class="layer-group">
+                        <div class="layer-header">
+                            <span class="material-icons-round">route</span>
+                            <h2>Road Conditions</h2>
+                        </div>
+                        <div class="layer-items">
+                            <label class="switch-item">
+                                <span>Incidents</span>
+                                <input type="checkbox" onchange="AddRoadTravelConditionsContent('incidents')">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Chain Requirements</span>
+                                <input type="checkbox" onchange="AddRoadTravelConditionsContent('chains')">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Cameras</span>
+                                <input type="checkbox" onchange="AddRoadTravelConditionsContent('cameras')">
+                                <span class="switch"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Weather -->
+                    <div class="layer-group">
+                        <div class="layer-header">
+                            <span class="material-icons-round">thermostat</span>
+                            <h2>Weather</h2>
+                        </div>
+                        <div class="layer-items">
+                            <label class="switch-item">
+                                <span>Temperature</span>
+                                <input type="checkbox" onchange="AddCurrentWeatherContent('temperature')">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Precipitation</span>
+                                <input type="checkbox" onchange="AddCurrentWeatherContent('precipitation')">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Wind</span>
+                                <input type="checkbox" onchange="AddCurrentWeatherContent('wind')">
+                                <span class="switch"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Fire Information -->
+                    <div class="layer-group">
+                        <div class="layer-header">
+                            <span class="material-icons-round">local_fire_department</span>
+                            <h2>Fire Information</h2>
+                        </div>
+                        <div class="layer-items">
+                            <label class="switch-item">
+                                <span>Active Fires</span>
+                                <input type="checkbox" onchange="AddFireContent('active')">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Contained Fires</span>
+                                <input type="checkbox" onchange="AddFireContent('contained')">
+                                <span class="switch"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Other Information -->
+                    <div class="layer-group">
+                        <div class="layer-header">
+                            <span class="material-icons-round">info</span>
+                            <h2>Points of Interest</h2>
+                        </div>
+                        <div class="layer-items">
+                            <label class="switch-item">
+                                <span>Rest Areas</span>
+                                <input type="checkbox" onchange="AddOtherInfoContent('rest_areas')">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Viewpoints</span>
+                                <input type="checkbox" onchange="AddOtherInfoContent('viewpoints')">
+                                <span class="switch"></span>
+                            </label>
+                            <label class="switch-item">
+                                <span>Services</span>
+                                <input type="checkbox" onchange="AddOtherInfoContent('services')">
+                                <span class="switch"></span>
+                            </label>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Theme Toggle -->
+            <div class="sidebar-footer">
+                <label class="switch-item">
+                    <span>Dark Mode</span>
+                    <input type="checkbox" id="theme-toggle" checked>
+                    <span class="switch"></span>
+                </label>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Map Container -->
+            <div id="map"></div>
+
+            <!-- Floating Controls -->
+            <div class="floating-controls">
+                <button class="menu-button" onclick="openNav()">
+                    <span class="material-icons-round">menu</span>
+                </button>
+                <button class="location-button" onclick="getCurrentLocation()">
+                    <span class="material-icons-round">my_location</span>
+                </button>
+            </div>
+
+            <!-- Legend -->
+            <div id="legend" class="legend"></div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading" class="loading-overlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <span>Loading...</span>
+            </div>
         </div>
-        <h2>CHP Incidents</h2>
-        <div id="incidentList"></div>
-        <h2>Traffic Conditions</h2>
-        <div id="trafficList"></div>
+
+        <!-- Error Toast -->
+        <div id="error-container" class="toast-container"></div>
     </div>
 
+    <!-- Service Worker Registration -->
     <script>
-        let map, markers, darkMode = false;
-
-        function initMap(userLat, userLon) {
-            // Initialize the map
-            map = L.map('map').setView([userLat, userLon], 10);
-
-            // Add light and dark mode tile layers
-            const lightTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
-                maxZoom: 18,
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('ServiceWorker registered'))
+                    .catch(err => console.log('ServiceWorker registration failed:', err));
             });
-
-            const darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://carto.com/">CartoDB</a>',
-                maxZoom: 18,
-            });
-
-            lightTileLayer.addTo(map);
-
-            document.getElementById('darkModeToggle').addEventListener('click', () => {
-                darkMode = !darkMode;
-                document.body.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-                darkMode ? darkTileLayer.addTo(map) && lightTileLayer.remove() : lightTileLayer.addTo(map) && darkTileLayer.remove();
-            });
-
-            // Add a marker cluster group
-            markers = L.markerClusterGroup();
-            map.addLayer(markers);
         }
-
-        function fetchCHPIncidents(userLat, userLon, radius, filter) {
-            const latRange = radius / 69.172;
-            const lonRange = radius / (69.172 * Math.cos(userLat * (Math.PI / 180)));
-            const lat1 = userLat - latRange, lat2 = userLat + latRange;
-            const lon1 = userLon - lonRange, lon2 = userLon + lonRange;
-
-            // Using secure proxy for CHP Incidents
-            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://cwwp2.dot.ca.gov/data/d3/cad/chp-cad.json`)}`)
-                .then(response => response.json())
-                .then(data => {
-                    const parsedData = JSON.parse(data.contents);
-                    // Filter incidents within the specified bounds
-                    const filteredData = parsedData.incidents.filter(incident => {
-                        if (!incident.latitude || !incident.longitude) return false;
-                        const incidentLat = parseFloat(incident.latitude);
-                        const incidentLon = parseFloat(incident.longitude);
-                        return incidentLat >= lat1 && incidentLat <= lat2 && 
-                               incidentLon >= lon1 && incidentLon <= lon2 &&
-                               (!filter || incident.incidentType === filter);
-                    });
-                    
-                    const incidentList = document.getElementById('incidentList');
-                    incidentList.innerHTML = '';
-
-                    filteredData.forEach((incident, index) => {
-                        const lat = parseFloat(incident.latitude);
-                        const lon = parseFloat(incident.longitude);
-                        const marker = L.marker([lat, lon])
-                            .bindPopup(`
-                                <b>${incident.incidentType}</b><br>
-                                ${incident.description}<br>
-                                <small>${incident.time}</small>
-                                <button onclick="getDirections(${lat}, ${lon})">Get Directions</button>
-                            `);
-                        markers.addLayer(marker);
-
-                        const item = document.createElement('div');
-                        item.className = 'incident';
-                        item.innerHTML = `<b>${incident.incidentType}</b><br>${incident.description}`;
-                        item.addEventListener('click', () => toggleDetails(item, marker, incident));
-                        incidentList.appendChild(item);
-                    });
-                });
-        }
-
-        function fetchCaltransData() {
-            // Using secure proxy for Caltrans data
-            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://quickmap.dot.ca.gov/data')}`)
-                .then(response => response.json())
-                .then(data => {
-                    const parsedData = JSON.parse(data.contents);
-                    const trafficList = document.getElementById('trafficList');
-                    trafficList.innerHTML = '';
-
-                    parsedData.roadClosureChains.forEach((closure, index) => {
-                        const lat = closure.latitude;
-                        const lon = closure.longitude;
-
-                        const marker = L.marker([lat, lon], { icon: L.divIcon({ className: 'closure-icon', html: '🚧' }) })
-                            .addTo(map)
-                            .bindPopup(`<b>Road Closure</b><br>${closure.description}`);
-
-                        const item = document.createElement('div');
-                        item.className = 'traffic-item';
-                        item.innerHTML = `<b>Road Closure</b><br>${closure.description}`;
-                        item.addEventListener('click', () => toggleDetails(item, marker, closure));
-                        trafficList.appendChild(item);
-                    });
-                })
-                .catch(err => console.error('Error fetching Caltrans data:', err));
-        }
-
-        function toggleDetails(item, marker, data) {
-            const isExpanded = item.classList.contains('expanded');
-            document.querySelectorAll('.incident, .traffic-item').forEach(i => i.classList.remove('expanded'));
-            if (!isExpanded) {
-                item.classList.add('expanded');
-                map.setView(marker.getLatLng(), 14);
-                marker.openPopup();
-            } else {
-                marker.closePopup();
-            }
-        }
-
-        function getDirections(lat, lon) {
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
-        }
-
-        document.getElementById('applyFilters').addEventListener('click', () => {
-            const radius = parseInt(document.getElementById('radiusInput').value, 10) || 20;
-            const filter = document.getElementById('incidentFilter').value;
-            navigator.geolocation.getCurrentPosition(position => {
-                const userLat = position.coords.latitude;
-                const userLon = position.coords.longitude;
-                markers.clearLayers();
-                fetchCHPIncidents(userLat, userLon, radius, filter);
-                fetchCaltransData();
-            });
-        });
-
-        navigator.geolocation.getCurrentPosition(position => {
-            const userLat = position.coords.latitude;
-            const userLon = position.coords.longitude;
-
-            initMap(userLat, userLon);
-            fetchCHPIncidents(userLat, userLon, 20, null);
-            fetchCaltransData();
-        });
-
-        setInterval(() => {
-            navigator.geolocation.getCurrentPosition(position => {
-                const userLat = position.coords.latitude;
-                const userLon = position.coords.longitude;
-                const radius = parseInt(document.getElementById('radiusInput').value, 10) || 20;
-                const filter = document.getElementById('incidentFilter').value;
-                markers.clearLayers();
-                fetchCHPIncidents(userLat, userLon, radius, filter);
-                fetchCaltransData();
-            });
-        }, 60000);
     </script>
+
+    <!-- Main Application Script -->
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
