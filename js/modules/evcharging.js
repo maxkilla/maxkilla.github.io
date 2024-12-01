@@ -9,7 +9,7 @@ class EVChargingModule {
     }
 
     async initialize() {
-        this.settings = await window.settingsManager.getModuleSettings('evcharging') || this.settings;
+        this.settings = await window.SmartTravelHub.settingsManager.getModuleSettings('evcharging') || this.settings;
         if (this.settings.enabled && this.settings.apiKey) {
             this.loadChargingStations();
         }
@@ -87,7 +87,7 @@ class EVChargingModule {
 
     async updateSettings(newSettings) {
         this.settings = { ...this.settings, ...newSettings };
-        await window.settingsManager.saveModuleSettings('evcharging', this.settings);
+        await window.SmartTravelHub.settingsManager.saveModuleSettings('evcharging', this.settings);
         
         if (this.settings.enabled && this.settings.apiKey) {
             this.loadChargingStations();
@@ -104,15 +104,8 @@ class EVChargingModule {
     }
 }
 
-// Register the module after core systems are initialized
-if (window.moduleManager) {
-    const evModule = new EVChargingModule(window.map);
-    window.moduleManager.registerModule('evcharging', evModule);
-} else {
-    window.addEventListener('load', () => {
-        if (window.moduleManager) {
-            const evModule = new EVChargingModule(window.map);
-            window.moduleManager.registerModule('evcharging', evModule);
-        }
-    });
-}
+// Register the module when core systems are ready
+window.addEventListener('smarttravelhub-core-ready', () => {
+    const evModule = new EVChargingModule(window.SmartTravelHub.map);
+    window.SmartTravelHub.moduleManager.registerModule('evcharging', evModule);
+});
